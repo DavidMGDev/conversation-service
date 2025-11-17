@@ -5,7 +5,7 @@ const path = require('path');
 const ALLOWED_THUMBPRINTS = process.env.ALLOWED_CLIENT_THUMBPRINTS
   ? process.env.ALLOWED_CLIENT_THUMBPRINTS.split(',')
   : [
-      '4A:01:2A:B5:7C:07:FC:29:F6:48:7B:13:E7:23:06:7F:B8:5C:A4:9E'
+      '1F:2D:94:4C:C9:D8:6C:8E:B2:09:F2:AA:80:F5:22:2F:67:68:A9:15:34:1A:77:D7:13:18:88:A6:33:FE:F7:73'
     ];
 
 const validateClientCertificate = (req, res, next) => {

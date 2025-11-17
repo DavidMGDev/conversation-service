@@ -26,7 +26,14 @@ const connectDB = async () => {
 
     console.log('💡 Tip: Check if your IP is whitelisted in Azure Cosmos DB firewall');
 
-    process.exit(1);
+    // In production, don't exit immediately - let the app start and retry
+    if (process.env.NODE_ENV === 'production') {
+      console.log('⚠️ Running in production mode - continuing despite DB connection failure');
+      console.log('💡 The app will attempt to reconnect on first request');
+      return; // Don't exit, let the app start
+    } else {
+      process.exit(1);
+    }
 
   }
 

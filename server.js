@@ -1,5 +1,17 @@
 require('dotenv').config();
 
+// Debug environment variables in production
+if (process.env.NODE_ENV === 'production') {
+  console.log('🔍 Environment variables check:');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('PORT:', process.env.PORT);
+  console.log('MONGO_URI exists:', !!process.env.MONGO_URI);
+  console.log('SERVICE_BUS_CONNECTION_STRING exists:', !!process.env.SERVICE_BUS_CONNECTION_STRING);
+  console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
+  console.log('GEMINI_API_KEY exists:', !!process.env.GEMINI_API_KEY);
+  console.log('CORS_ORIGIN:', process.env.CORS_ORIGIN);
+}
+
 const express = require('express');
 
 const fs = require('fs');

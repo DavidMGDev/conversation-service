@@ -2,6 +2,14 @@ require('dotenv').config();
 
 const express = require('express');
 
+const fs = require('fs');
+
+const http = require('http');
+
+const https = require('https');
+
+const path = require('path');
+
 const cors = require('cors');
 
 const helmet = require('helmet');
@@ -25,13 +33,13 @@ const dictionaryRoutes = require('./src/routes/dictionary');
 
 const app = express();
 
-// Global middlewares
+// === Global Middleware ===
 
 app.use(helmet());
 
 app.use(cors({
 
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
 
   credentials: true
 
@@ -41,8 +49,11 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 
-// Certificate-based authentication (mTLS) - validates APIM client certificate
-app.use(validateClientCertificate);
+// === Certificate Validation ===
+// Skip in development, enforce in production
+if (process.env.NODE_ENV === 'production' && process.env.SKIP_MTLS !== 'true') {
+  app.use(validateClientCertificate);
+}
 
 // Logging middleware (development only)
 
@@ -188,7 +199,7 @@ process.on('SIGINT', async () => {
 
 });
 
-// Start services
+// === Server Startup ===
 
 async function startServer() {
 
@@ -198,15 +209,61 @@ async function startServer() {
 
     initServiceBus();
 
-    const PORT = process.env.PORT || 3000;
 
-    app.listen(PORT, () => {
 
-      console.log(`🚀 Conversation Service running on port ${PORT}`);
+    const PORT = process.env.PORT || 3004;
 
-      console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+    const HOST = process.env.HOST || '0.0.0.0';
 
-    });
+
+
+    // === Local Development: HTTP ===
+
+    if (process.env.NODE_ENV === 'development' || process.env.SKIP_MTLS === 'true') {
+
+      http.createServer(app).listen(PORT, HOST, () => {
+
+        console.log(`🚀 Conversation Service (HTTP) running on http://${HOST}:${PORT}`);
+
+        console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+
+        console.log(`⚠️ mTLS validation skipped - set SKIP_MTLS=false to enable`);
+
+      });
+
+    }
+
+    // === Production: HTTPS with mTLS ===
+
+    else {
+
+      const httpsOptions = {
+
+        key: fs.readFileSync(path.join(__dirname, 'certs', 'server-key.pem')),
+
+        cert: fs.readFileSync(path.join(__dirname, 'certs', 'server-cert.pem')),
+
+        ca: fs.readFileSync(path.join(__dirname, 'certs', 'ca-cert.pem')),
+
+        requestCert: true,
+
+        rejectUnauthorized: true
+
+      };
+
+
+
+      https.createServer(httpsOptions, app).listen(PORT, HOST, () => {
+
+        console.log(`🚀 Conversation Service (HTTPS mTLS) running on https://${HOST}:${PORT}`);
+
+        console.log(`✅ Certificate validation enabled`);
+
+      });
+
+    }
+
+
 
   } catch (error) {
 
@@ -217,5 +274,7 @@ async function startServer() {
   }
 
 }
+
+
 
 startServer();

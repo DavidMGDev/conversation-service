@@ -4,13 +4,9 @@ const connectDB = async () => {
 
   try {
 
-    await mongoose.connect(process.env.MONGO_URI, {
+    // === FIX: Removed deprecated options ===
 
-      useNewUrlParser: true,
-
-      useUnifiedTopology: true,
-
-    });
+    await mongoose.connect(process.env.MONGO_URI);
 
     console.log('✅ MongoDB (Cosmos DB) connected successfully');
 

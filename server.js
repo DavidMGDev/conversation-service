@@ -58,9 +58,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // === Certificate Validation ===
-// Skip in development, enforce in production
-if (process.env.NODE_ENV === 'production' && process.env.SKIP_MTLS !== 'true') {
+// ONLY apply when NOT in development and NOT skipping mTLS
+if (process.env.NODE_ENV !== 'development' && process.env.SKIP_MTLS !== 'true') {
   app.use(validateClientCertificate);
+  console.log('🔒 mTLS validation enabled');
+} else {
+  console.log('⚠️ mTLS validation SKIPPED (development or Azure mode)');
 }
 
 // Logging middleware (development only)

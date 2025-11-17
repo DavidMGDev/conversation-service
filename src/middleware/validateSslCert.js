@@ -8,10 +8,18 @@ const ALLOWED_THUMBPRINTS = process.env.ALLOWED_CLIENT_THUMBPRINTS
       '1F:2D:94:4C:C9:D8:6C:8E:B2:09:F2:AA:80:F5:22:2F:67:68:A9:15:34:1A:77:D7:13:18:88:A6:33:FE:F7:73'
     ];
 
+const isAzureEnvironment = () => {
+  // Azure App Service sets several environment variables
+  return process.env.WEBSITE_SITE_NAME !== undefined ||
+         process.env.WEBSITE_INSTANCE_ID !== undefined ||
+         process.env.WEBSITE_SKU !== undefined;
+};
+
 const validateClientCertificate = (req, res, next) => {
-  // === FIX: Development bypass with proper flagging ===
-  if (process.env.NODE_ENV === 'development' || process.env.SKIP_MTLS === 'true') {
-    console.log('⚠️ Development mode: Skipping client certificate validation');
+  // === CRITICAL: Skip validation in Azure App Service ===
+  // Azure terminates SSL at the front-end; req.socket is not a TLS socket
+  if (isAzureEnvironment() || process.env.NODE_ENV === 'development' || process.env.SKIP_MTLS === 'true') {
+    console.log(`⚠️ Skipping mTLS validation - Azure detected: ${isAzureEnvironment()}`);
     req.clientCertVerified = false; // Explicitly mark as not verified
     return next();
   }
